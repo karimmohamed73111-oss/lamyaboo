@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jar of notes</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 44%,#fff1f2,#f9dce2 70%,#f5d3db);overflow:hidden}
+.scene{width:min(95vw,76svh,530px);aspect-ratio:1;position:relative}
+svg{width:100%;height:100%;display:block;overflow:visible}
+.scene button{position:absolute;left:27%;top:24%;width:46%;height:58%;border:0;background:transparent;cursor:pointer;border-radius:30%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px dashed #ab576f;outline-offset:7px}
+#jar,#lid,#paper{transform-box:fill-box;transform-origin:center}
+#jar{transform-origin:center bottom}
+#paper{opacity:0}
+.draw #jar{animation:rock .54s ease-in-out}
+.draw #lid{animation:pop 1.35s both}
+.draw #paper{animation:rise 1.6s both}
+@keyframes rock{25%{transform:rotate(-3deg)}60%{transform:rotate(2deg)}}
+@keyframes pop{0%,16%,100%{transform:none}44%,62%{transform:translate(52px,-30px) rotate(25deg)}}
+@keyframes rise{0%,25%{opacity:0;transform:translate(0,125px) rotate(-19deg) scale(.27,.19)}36%{opacity:1}62%{transform:translate(-11px,-13px) rotate(-10deg) scale(.58,.48)}82%{transform:translate(2px,1px) rotate(3deg) scale(1.03)}100%{opacity:1;transform:rotate(-3deg)}}
+@media(prefers-reduced-motion:reduce){.draw #jar,.draw #lid{animation:none}.draw #paper{animation:none;opacity:1}}
+.fruit {opacity:0; transform-box:view-box; transform-origin:0 0}
+.draw .fruit {animation:fruit-flight 1.35s var(--delay) cubic-bezier(.22,.65,.32,1) both}
+@keyframes fruit-flight {
+ 0% {opacity:0;transform:translate(200px,138px) scale(.15)}
+ 12% {opacity:1}
+ 64% {opacity:1;transform:translate(var(--peak-x),var(--peak-y)) rotate(var(--spin)) scale(1.05)}
+ 100% {opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--tilt)) scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+ .draw .fruit {animation:none;opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--tilt))}
+}
+.hearts {position:fixed;inset:0;overflow:hidden;pointer-events:none;user-select:none}
+.heart {position:absolute;bottom:0;line-height:1;opacity:0;animation:heart-rise var(--duration) var(--delay) ease-out both}
+@keyframes heart-rise {
+ 0% {opacity:0;transform:translateY(105%) rotate(-10deg)}
+ 15% {opacity:.8}
+ 52% {opacity:.7;transform:translate(calc(var(--drift) * -.28),calc(var(--rise) * .55)) rotate(9deg)}
+ 100% {opacity:0;transform:translate(var(--drift),var(--rise)) rotate(-8deg)}
+}
+@media(prefers-reduced-motion:reduce){
+ .heart {bottom:5%;animation-name:heart-fade;animation-duration:.8s}
+ @keyframes heart-fade {0%,100% {opacity:0} 40% {opacity:.65}}
+}
+.balloons {position:fixed;inset:0;overflow:hidden;pointer-events:none}
+.balloon {position:absolute;top:100%;width:clamp(46px,9vw,90px);height:auto;
+ animation:balloon-flight 22s linear both}
+.balloon:first-child {left:9%;--sway:3vw}
+.balloon:last-child {right:10%;--sway:-4vw;animation-delay:.6s}
+@keyframes balloon-flight {
+ 0% {transform:translate(0,0) rotate(-3deg)}
+ 28% {transform:translate(var(--sway),-30vh) rotate(4deg)}
+ 57% {transform:translate(0,-62vh) rotate(-3deg)}
+ 91% {transform:translate(var(--sway),-100vh) rotate(3deg)}
+ 100% {transform:translate(var(--sway),calc(-100vh - 105%)) rotate(1deg)}
+}
+@media(prefers-reduced-motion:reduce){
+ .balloon {top:15%;animation:lantern-fade 2s ease both}
+ @keyframes lantern-fade {0%,100% {opacity:0} 35%,65% {opacity:1}}
+}
+.tools{position:fixed;z-index:2;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);font:16px/1.4 system-ui,sans-serif;color:#724957}
+.controls{display:flex;align-items:center;justify-content:center;gap:4px}
+.controls button{height:44px;min-width:44px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;touch-action:manipulation;border-radius:9px}
+.controls svg{width:30px;height:22px;margin:auto}
+.controls button:hover,.controls button[aria-expanded="true"]{background:#fff5f78c}
+#history{position:absolute;top:100%;left:50%;transform:translateX(-50%);width:min(280px,90vw);max-height:65svh;overflow:auto;padding:15px;background:#fff8f8;border:1px solid #ddb9c4;border-radius:12px;box-shadow:0 6px 20px #90476318}
+#history h2,#history p{font-size:1rem;margin:0}
+#history p{margin-top:8px}
+#history ol{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+#history ol:empty{display:none}
+#history li{background:linear-gradient(100deg,#fffaf0 49%,#f4e4d1 50%,#fff7e9 51%);border:1px solid #e1c8b6;padding:12px;border-radius:2px;white-space:pre-wrap}
+#paper-message{height:100%;overflow:auto;display:flex;flex-direction:column;align-items:center;color:#674651;font:9px/1.22 Georgia,serif;text-align:center;overflow-wrap:anywhere;white-space:pre-wrap}
+#paper-message span{margin:auto 0;max-width:100%}
+</style>
+</head><body>
+<div class="tools">
+ <div class="controls">
+  <button type="button" id="envelope" aria-label="Drawn notes" aria-expanded="false" aria-controls="history"><svg aria-hidden="true" viewBox="0 0 32 23"><rect x="1" y="1" width="30" height="21" rx="3" fill="#f4c1cd" stroke="#996679"/><path d="m2 3 14 11L30 3M2 20l9-8m19 8-9-8" stroke="#996679" fill="none" stroke-linejoin="round"/></svg></button>
+  <button type="button" id="reset">Reset</button>
+ </div>
+ <section id="history" aria-labelledby="history-title" hidden><h2 id="history-title">Drawn notes</h2><p id="empty">No notes drawn yet.</p><ol></ol></section>
+</div>
+<div class="balloons" aria-hidden="true"></div>
+<template id="balloon-pair">
+ <svg class="balloon" viewBox="0 0 70 98"><use href="#candle-balloon"/></svg>
+ <svg class="balloon" viewBox="0 0 70 98"><use href="#candle-balloon"/></svg>
+</template>
+<div class="hearts" aria-hidden="true"></div>
+<main class="scene">
+<svg viewBox="0 0 400 400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="glass"><stop stop-color="#fff9f5" stop-opacity=".8"/><stop offset=".09" stop-color="#d7a9b2" stop-opacity=".32"/><stop offset=".17" stop-color="white" stop-opacity=".64"/><stop offset=".32" stop-color="#fffbef" stop-opacity=".17"/><stop offset=".72" stop-color="#fffbef" stop-opacity=".22"/><stop offset=".91" stop-color="#b7859a" stop-opacity=".28"/><stop offset="1" stop-color="#fff8f1" stop-opacity=".8"/></linearGradient>
+<linearGradient id="cork" x2=".2" y2="1"><stop stop-color="#dba883"/><stop offset="1" stop-color="#bd8365"/></linearGradient>
+<linearGradient id="sheet" x2=".2" y2="1"><stop stop-color="#fffcf1"/><stop offset="1" stop-color="#ffedda"/></linearGradient>
+<pattern id="grain" width="19" height="11" patternUnits="userSpaceOnUse"><path d="m3 3 2 1m8 3 1 -.5" stroke="#85523e" opacity=".36" stroke-linecap="round"/><circle cx="8" cy="9" r=".8" fill="#fff0ce"/></pattern>
+<filter id="blur"><feGaussianBlur stdDeviation="5"/></filter>
+<path id="body" d="M145 144Q148 162 133 171Q111 182 110 203L109 289Q109 313 131 319Q198 331 267 319Q290 315 291 292L290 203Q290 183 267 171Q252 161 255 144Z"/>
+<clipPath id="inside"><use href="#body"/></clipPath>
+<g id="fold" stroke="#996e71" stroke-width=".85" stroke-linejoin="round"><path d="m-24 -10 46 -2 3 22 -48 2Z" fill="currentColor"/><path d="m-24 -10 22 16 24 -18" fill="#fff" fill-opacity=".27"/><path d="m-23 12 14 -10m34 8 -17 -9" fill="none" opacity=".52"/></g>
+<g id="strawberry" stroke-linejoin="round">
+ <path d="M-1-7C-15-14-17-1-9 9Q0 24 8 11C19-5 13-13 2-8Z" fill="#e97478" stroke="#a64f5e"/>
+ <path d="M0-8q-3-6-9-5l4 5-6 2 9 1 4 4 1-6 8-1-7-3 1-5Z" fill="#769264"/>
+ <path d="m-8 1 1 2m6-3 1 2m7-3-1 2m-10 4 1 2m6-1-1 2m-2 3 1 2" stroke="#ffe9ad" stroke-width="1.5" stroke-linecap="round"/>
+</g>
+<g id="raspberry" stroke="#a14565" stroke-width=".8">
+ <path d="M-2-8q-8 1-11-7l9 3q1-6 5-8l1 7 8-2-5 7" fill="#84976b" stroke="#769264"/>
+ <g fill="#ca6785"><circle cx="-6" cy="-6" r="5"/><circle cx="1" cy="-7" r="5"/><circle cx="7" cy="-4" r="5"/><circle cx="-9" cy="0" r="5"/><circle cx="7" cy="3" r="5"/><circle cx="-5" cy="7" r="5"/><circle cx="2" cy="10" r="5"/></g>
+ <g fill="#df839c"><circle cx="-2" cy="-1" r="5"/><circle cx="2" cy="5" r="4.5"/></g>
+</g>
+<linearGradient id="mango-skin" x2=".8" y2="1"><stop stop-color="#e58d79"/><stop offset=".45" stop-color="#f2af65"/><stop offset="1" stop-color="#f6ce72"/></linearGradient>
+<g id="mango"><path d="M5-10C17-9 16 5 8 12S-14 19-14 10Q-8 5-8-2C-7-12-1-14 5-10Z" fill="url(#mango-skin)" stroke="#b78558"/>
+ <path d="M5-10q1-6 6-8" fill="none" stroke="#88664b" stroke-width="1.6"/><path d="M7-14q-9-7-16-2 7 8 16 2Z" fill="#859968"/>
+</g>
+<radialGradient id="lantern-glow" cx="50%" cy="86%" r="88%">
+ <stop stop-color="#fff49c"/><stop offset=".32" stop-color="#ffd15a"/><stop offset=".68" stop-color="#ffa034"/><stop offset="1" stop-color="#e87929"/>
+</radialGradient>
+<g id="candle-balloon" stroke-linejoin="round">
+ <path d="M13 13Q34 6 55 12Q59 13 60 20L62 56Q62 64 55 77Q52 84 36 86Q20 86 16 79L9 61Q7 55 8 45L10 20Q10 15 13 13Z" fill="url(#lantern-glow)" stroke="#d7883a" stroke-width=".9"/>
+ <path d="M13 14Q21 11 23 12Q17 42 19 60L23 81Q18 81 16 75L10 57Q8 46 13 14Z" fill="#c9672d" opacity=".19"/>
+ <path d="M55 14Q59 38 57 57L51 79" stroke="#ffe389" stroke-width="1.1" opacity=".55" fill="none"/>
+ <ellipse cx="35.5" cy="81.5" rx="18" ry="5" fill="#ffda69" stroke="#df933a" stroke-width=".8"/>
+ <path d="M34 84Q29 81 32 76Q35 73 35 69Q42 79 37 83Z" fill="#fff9c5"/>
+</g>
+</defs>
+<ellipse cx="202" cy="327" rx="80" ry="8" fill="#b36e85" opacity=".25" filter="url(#blur)"/>
+<g transform="translate(24 0) scale(.88 1)">
+<g id="jar">
+<use href="#body" fill="#fff7eb" fill-opacity=".37"/>
+<g clip-path="url(#inside)" id="pile"></g>
+<use href="#body" fill="url(#glass)" stroke="#ab8792" stroke-width="1.7"/>
+<path d="M120 298Q122 309 137 312Q197 322 266 312Q277 310 281 301M122 210v41m0 9v7m151 -79q7 8 7 20v26" fill="none" stroke="#fffdfa" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+<rect x="139" y="136" width="122" height="14" rx="7" fill="url(#glass)" stroke="#b9959b" stroke-width="1.6"/>
+<path d="M145 154Q196 164 256 153" fill="none" stroke="#be6e84" stroke-width="4"/>
+<g fill="#e9a2b2" stroke="#b76f84" stroke-width="1.4" stroke-linejoin="round"><path d="M238 157q-29 -24 -34 -10t34 10q18 -26 25 -16t-25 16Z"/><path d="M235 157q-9 15 -10 29l-5 -6 -5 2q5 -17 20 -25Zm3 0q12 17 24 16l-3 6 2 4q-17 -5 -23 -26Z"/><ellipse cx="237" cy="156" rx="4.5" ry="4"/></g>
+<g id="lid"><path d="M143 113Q199 104 257 114l-4 23q-53 9 -106 0Z" fill="url(#cork)" stroke="#aa795e" stroke-width="1.5"/><path d="M143 113Q199 104 257 114l-4 23q-53 9 -106 0Z" fill="url(#grain)"/><ellipse cx="200" cy="113" rx="57" ry="7" fill="#e9bf9c" stroke="#b58a6d"/><ellipse cx="200" cy="113" rx="55" ry="6" fill="url(#grain)"/></g>
+</g>
+</g>
+<g id="fruits">
+ <use class="fruit" style="--delay:.41s;--peak-x:109px;--peak-y:48px;--x:98px;--y:89px;--spin:-37deg;--tilt:-18deg"/>
+ <use class="fruit" style="--delay:.52s;--peak-x:289px;--peak-y:28px;--x:300px;--y:59px;--spin:34deg;--tilt:15deg"/>
+ <use class="fruit" style="--delay:.63s;--peak-x:279px;--peak-y:86px;--x:287px;--y:119px;--spin:-22deg;--tilt:-9deg"/>
+ <use class="fruit" style="--delay:.69s;--peak-x:98px;--peak-y:15px;--x:105px;--y:35px;--spin:29deg;--tilt:11deg"/>
+ <use class="fruit" style="--delay:.76s;--peak-x:118px;--peak-y:95px;--x:113px;--y:137px;--spin:-32deg;--tilt:-12deg"/>
+</g>
+<g id="paper"><g transform="translate(200 54) scale(1.43) translate(-200 -54)"><path d="m146 20 106 1 -1 66 -105 -2Z" fill="#a26972" opacity=".15" transform="translate(1 4)" filter="url(#blur)"/><path d="m146 20 106 1 -1 66 -105 -2Z" fill="url(#sheet)" stroke="#d3b29f"/><path d="m199 21 -1 64" stroke="#ddcabb" opacity=".5"/>
+ <foreignObject x="152" y="25" width="94" height="55"><div xmlns="http://www.w3.org/1999/xhtml" id="paper-message"></div></foreignObject>
+</g></g>
+</svg>
+<button aria-label="Draw a note from the jar"></button>
+</main>
+<!-- YOUR 25 NOTES: write each message between <p> and </p>. Leave unused slots empty. -->
+<template id="personal-notes">
+  <!-- Note 01 --> <p>test</p>
+  <!-- Note 02 --> <p>test</p>
+  <!-- Note 03 --> <p>test</p>
+  <!-- Note 04 --> <p>test</p>
+  <!-- Note 05 --> <p>test</p>
+  <!-- Note 06 --> <p>test</p>
+  <!-- Note 07 --> <p>test</p>
+  <!-- Note 08 --> <p>test</p>
+  <!-- Note 09 --> <p>test</p>
+  <!-- Note 10 --> <p>test</p>
+  <!-- Note 11 --> <p>test</p>
+  <!-- Note 12 --> <p>test</p>
+  <!-- Note 13 --> <p>test</p>
+  <!-- Note 14 --> <p>test</p>
+  <!-- Note 15 --> <p>test</p>
+  <!-- Note 16 --> <p>test</p>
+  <!-- Note 17 --> <p>test</p>
+  <!-- Note 18 --> <p>test</p>
+  <!-- Note 19 --> <p>test</p>
+  <!-- Note 20 --> <p>test</p>
+  <!-- Note 21 --> <p>test</p>
+  <!-- Note 22 --> <p>test</p>
+  <!-- Note 23 --> <p>test</p>
+  <!-- Note 24 --> <p>test</p>
+  <!-- Note 25 --> <p>test</p>
+</template>
+<script>
+const pile = document.querySelector('#pile');
+const folds = [
+ [139,285,-24,'#e899ac'],[183,300,13,'#eac3a3'],[226,294,-30,'#d99db7'],[270,287,17,'#dbb7bf'],
+ [125,269,39,'#f0bfad'],[164,269,-12,'#eeb9c5'],[202,275,24,'#f7dbba'],[251,265,-36,'#e4a8b6'],
+ [144,244,-25,'#efc3a8'],[187,244,12,'#dba5bd'],[222,249,-9,'#f0bcc8'],[268,240,33,'#efd7be'],
+ [164,224,22,'#eaa5b4'],[209,225,-33,'#f3cfad'],[244,221,14,'#e8b8c8']
+];
+for(const [x,y,angle,color] of folds){
+ const note=document.createElementNS(pile.namespaceURI,'use');
+ note.setAttribute('href','#fold');
+ note.setAttribute('transform','translate('+x+' '+y+') rotate('+angle+') scale(1.46 1.32)');
+ note.style.color=color;
+ pile.append(note);
+}
+const scene=document.querySelector('.scene');
+const fruitTypes = ['strawberry', 'raspberry', 'mango'];
+const fruits = document.querySelectorAll('.fruit');
+const heartLayer = document.querySelector('.hearts');
+const heartColors = ['#cb6082', '#df7893', '#be5479', '#e98da2'];
+function releaseHearts() {
+ const count = 5 + Math.floor(Math.random() * 6);
+ const burst = document.createDocumentFragment();
+ for (let i = 0; i < count; i++) {
+   const heart = document.createElement('span');
+   heart.className = 'heart';
+   heart.textContent = '♥';
+   heart.style.left = ((i + Math.random()) / count * 94 + 1) + '%';
+   heart.style.fontSize = (17 + Math.random() * 19) + 'px';
+   heart.style.color = heartColors[i % heartColors.length];
+   heart.style.setProperty('--rise', -(38 + Math.random() * 45) + 'vh');
+   heart.style.setProperty('--drift', (Math.random() * 16 - 8) + 'vw');
+   heart.style.setProperty('--delay', (.45 + Math.random() * .65) + 's');
+   heart.style.setProperty('--duration', (2 + Math.random() * 1.4) + 's');
+   heart.addEventListener('animationend', () => heart.remove(), {once:true});
+   burst.append(heart);
+ }
+ heartLayer.replaceChildren(burst);
+}
+const envelope = document.querySelector('#envelope');
+const historyPanel = document.querySelector('#history');
+const noteList = historyPanel.querySelector('ol');
+const emptyState = document.querySelector('#empty');
+const storageKey = 'note-jar.drawn-notes.v1';
+let drawnNotes = [];
+try {
+ const saved = JSON.parse(localStorage.getItem(storageKey));
+ if (Array.isArray(saved)) drawnNotes = saved.filter(note => typeof note === 'string');
+} catch { /* Storage can be unavailable when opened as a local file. */ }
+
+function saveNotes() {
+ try { localStorage.setItem(storageKey, JSON.stringify(drawnNotes)); } catch {}
+}
+function renderHistory() {
+ noteList.replaceChildren();
+ drawnNotes.forEach((message, index) => {
+   const slip = document.createElement('li');
+   slip.textContent = message || ('Note ' + (index + 1));
+   noteList.prepend(slip);
+ });
+ emptyState.hidden = drawnNotes.length > 0;
+}
+function showHistory(open) {
+ if (open) renderHistory();
+ historyPanel.hidden = !open;
+ envelope.setAttribute('aria-expanded', String(open));
+}
+envelope.addEventListener('click', () => showHistory(historyPanel.hidden));
+document.addEventListener('keydown', event => {
+ if (event.key === 'Escape' && !historyPanel.hidden) {
+   showHistory(false);
+   envelope.focus();
+ }
+});
+document.querySelector('#reset').addEventListener('click', () => {
+ drawnNotes = [];
+ saveNotes();
+ renderHistory();
+ showHistory(false);
+ scene.classList.remove('draw');
+ heartLayer.replaceChildren();
+ document.querySelector('.balloons').replaceChildren();
+});
+scene.querySelector('button').addEventListener('click',()=>{
+ const messages = Array.from(document.querySelector('#personal-notes').content.querySelectorAll('p'),
+   slot => slot.textContent.trim()).filter(Boolean);
+ const recent = drawnNotes.filter(text => messages.includes(text)).slice(-(messages.length - 1 || 1));
+ const remaining = messages.filter(text => !recent.includes(text));
+ const choices = remaining.length ? remaining : messages;
+ const message = choices[Math.floor(Math.random() * choices.length)] || '';
+ const paperMessage = document.querySelector('#paper-message');
+ const line = document.createElement('span');
+ line.textContent = message;
+ paperMessage.replaceChildren(line);
+ drawnNotes.push(message);
+ saveNotes();
+ showHistory(false);
+ scene.classList.remove('draw');
+ for (const fruit of fruits) {
+   const kind = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+   fruit.setAttribute('href', '#' + kind);
+ }
+ void scene.offsetWidth;
+ scene.classList.add('draw');
+ releaseHearts();
+ const pair = document.querySelector('#balloon-pair').content.cloneNode(true);
+ for (const balloon of pair.children) {
+   balloon.addEventListener('animationend', () => balloon.remove(), {once:true});
+ }
+ document.querySelector('.balloons').replaceChildren(pair);
+});
+</script>
+</body></html>
