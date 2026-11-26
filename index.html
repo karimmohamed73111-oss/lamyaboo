@@ -290,4 +290,39 @@ scene.querySelector('button').addEventListener('click',()=>{
  document.querySelector('.balloons').replaceChildren(pair);
 });
 </script>
+ <style>
+  #envelope {
+    position: relative;
+  }
+
+  #note-count {
+    position: absolute;
+    top: 0;
+    right: -3px;
+    padding: 2px 5px;
+    border-radius: 12px;
+    background: #a34869;
+    color: white;
+    font: 600 11px/1.2 system-ui, sans-serif;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const envelopeButton = document.querySelector('#envelope');
+  const noteCount = document.createElement('span');
+  noteCount.id = 'note-count';
+  noteCount.setAttribute('aria-hidden', 'true');
+  envelopeButton.append(noteCount);
+
+  function updateNoteCount() {
+    const count = Math.min(drawnNotes.length, 25);
+    noteCount.textContent = `${count}/25`;
+    envelopeButton.setAttribute('aria-label', `Drawn notes, ${count} of 25`);
+  }
+
+  document.querySelector('.scene button').addEventListener('click', updateNoteCount);
+  document.querySelector('#reset').addEventListener('click', updateNoteCount);
+  updateNoteCount();
+</script>
 </body></html>
