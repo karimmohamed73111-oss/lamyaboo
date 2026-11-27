@@ -331,9 +331,9 @@ scene.querySelector('button').addEventListener('click',()=>{
   envelopeButton.append(noteCount);
 
   function updateNoteCount() {
-    const count = Math.min(drawnNotes.length, 25);
-    noteCount.textContent = `${count}/25`;
-    envelopeButton.setAttribute('aria-label', `Drawn notes, ${count} of 25`);
+    const count = Math.min(drawnNotes.length, 40);
+    noteCount.textContent = `${count}/40`;
+    envelopeButton.setAttribute('aria-label', `Drawn notes, ${count} of 40`);
   }
 
   document.querySelector('.scene button').addEventListener('click', updateNoteCount);
